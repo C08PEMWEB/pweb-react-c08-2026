@@ -1,0 +1,140 @@
+{
+  "jobs": [
+    {
+      "id": 1001,
+      "title": "Frontend Engineering Intern (React & TypeScript)",
+      "company_name": "Nusantara Cloud Tech",
+      "category": "Frontend",
+      "candidate_required_location": "Surabaya (Hybrid)",
+      "salary": "Rp 4.500.000 / bulan",
+      "tags": ["React", "TypeScript", "CSS", "Git"]
+    },
+    {
+      "id": 1002,
+      "title": "Full-Stack Web Developer Intern",
+      "company_name": "Garuda FinTech",
+      "category": "Software Development",
+      "candidate_required_location": "Jakarta (Remote)",
+      "salary": "Rp 5.500.000 / bulan",
+      "tags": ["React", "TypeScript", "PostgreSQL", "Express", "Docker"]
+    },
+    {
+      "id": 1003,
+      "title": "Software Engineer Intern — Web Platform",
+      "company_name": "Bintang Commerce",
+      "category": "Software Development",
+      "candidate_required_location": "Indonesia (Remote)",
+      "salary": "Rp 6.000.000 / bulan",
+      "tags": ["React", "TypeScript", "CSS", "Tailwind", "Docker"]
+    },
+    {
+      "id": 1004,
+      "title": "DevOps & Cloud Infrastructure Intern",
+      "company_name": "AwanMerdeka Cloud",
+      "category": "DevOps / Sysadmin",
+      "candidate_required_location": "Jakarta (Remote)",
+      "salary": "Rp 5.200.000 / bulan",
+      "tags": ["Git", "PostgreSQL", "Linux", "Docker", "CI/CD"]
+    },
+    {
+      "id": 1005,
+      "title": "UI Engineer Intern (Design System)",
+      "company_name": "EduSpark Indonesia",
+      "category": "Frontend",
+      "candidate_required_location": "Bandung (Hybrid)",
+      "salary": "Rp 4.000.000 / bulan",
+      "tags": ["React", "CSS", "TypeScript", "Figma"]
+    },
+    {
+      "id": 1006,
+      "title": "Backend API Engineer Intern",
+      "company_name": "KilatPay Digital",
+      "category": "Backend",
+      "candidate_required_location": "Jakarta (Hybrid)",
+      "salary": "Rp 5.000.000 / bulan",
+      "tags": ["Node.js", "TypeScript", "PostgreSQL", "REST API", "Docker"]
+    },
+    {
+      "id": 1007,
+      "title": "Junior Frontend Intern — Dashboard Analytics",
+      "company_name": "PetaNusa GeoTech",
+      "category": "Frontend",
+      "candidate_required_location": "Yogyakarta (Remote)",
+      "salary": "Rp 4.200.000 / bulan",
+      "tags": ["React", "TypeScript", "CSS", "REST API"]
+    },
+    {
+      "id": 1008,
+      "title": "Mobile Cross-Platform Intern (React Native)",
+      "company_name": "KopiStack Digital",
+      "category": "Mobile",
+      "candidate_required_location": "Surabaya (Onsite)",
+      "salary": "Rp 3.800.000 / bulan",
+      "tags": ["React", "TypeScript", "React Native", "Git"]
+    },
+    {
+      "id": 1009,
+      "title": "Data & AI Engineering Intern",
+      "company_name": "Merapi AI Labs",
+      "category": "Data",
+      "candidate_required_location": "Yogyakarta (Hybrid)",
+      "salary": "Rp 5.300.000 / bulan",
+      "tags": ["Python", "SQL", "Docker", "Machine Learning"]
+    },
+    {
+      "id": 1010,
+      "title": "QA Automation & Testing Intern",
+      "company_name": "Bahari Logistics Tech",
+      "category": "QA",
+      "candidate_required_location": "Surabaya (Hybrid)",
+      "salary": "Rp 3.700.000 / bulan",
+      "tags": ["TypeScript", "Playwright", "Git", "REST API"]
+    },
+    {
+      "id": 1011,
+      "title": "Web Engineer Intern — Media Streaming",
+      "company_name": "Svara Media Nusantara",
+      "category": "Frontend",
+      "candidate_required_location": "Jakarta (Remote)",
+      "salary": "Rp 4.800.000 / bulan",
+      "tags": ["React", "CSS", "Next.js", "TypeScript"]
+    },
+    {
+      "id": 1012,
+      "title": "Platform Security & Cloud Intern",
+      "company_name": "Cakra CyberSec",
+      "category": "DevOps / Sysadmin",
+      "candidate_required_location": "Bandung (Onsite)",
+      "salary": "Rp 4.600.000 / bulan",
+      "tags": ["Linux", "Docker", "Networking", "Python"]
+    },
+    {
+      "id": 1013,
+      "title": "Fullstack Product Engineer Intern",
+      "company_name": "TaniPintar Agritech",
+      "category": "Software Development",
+      "candidate_required_location": "Malang (Hybrid)",
+      "salary": "Rp 4.100.000 / bulan",
+      "tags": ["React", "TypeScript", "CSS", "Node.js", "Prisma"]
+    },
+    {
+      "id": 1014,
+      "title": "Frontend Portal Intern — HealthTech",
+      "company_name": "LokaMedika Digital",
+      "category": "Frontend",
+      "candidate_required_location": "Jakarta (Hybrid)",
+      "salary": "Rp 4.400.000 / bulan",
+      "tags": ["React", "CSS", "HTML", "REST API"]
+    },
+    {
+      "id": 1015,
+      "title": "Interactive Web & Voxel UI Intern",
+      "company_name": "Rupa Studio Interactive",
+      "category": "Software Development",
+      "candidate_required_location": "Bali (Remote)",
+      "salary": "Rp 5.800.000 / bulan",
+      "tags": ["React", "TypeScript", "CSS", "Tailwind", "WebGL"]
+    }
+  ]
+}
+

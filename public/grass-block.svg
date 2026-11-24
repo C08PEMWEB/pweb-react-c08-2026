@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Isometric Minecraft Grass Block -->
+  <!-- Top Grass Face -->
+  <polygon points="32,6 58,20 32,34 6,20" fill="#6BAF5D" />
+  <polygon points="32,6 45,13 32,20 19,13" fill="#7EC36E" />
+  <polygon points="45,13 58,20 45,27 32,20" fill="#5D9E50" />
+  <!-- Left Dirt Face -->
+  <polygon points="6,20 32,34 32,58 6,44" fill="#B57A4E" />
+  <!-- Left Grass Overhang -->
+  <polygon points="6,20 32,34 32,41 25,37 25,34 18,30 18,33 11,29 11,26 6,24" fill="#559247" />
+  <!-- Left Dirt Pixels -->
+  <polygon points="12,35 19,39 19,45 12,41" fill="#9E673E" />
+  <polygon points="22,44 28,47 28,53 22,50" fill="#8C5934" />
+  <!-- Right Dirt Face (Shaded) -->
+  <polygon points="58,20 32,34 32,58 58,44" fill="#8E5B37" />
+  <!-- Right Grass Overhang -->
+  <polygon points="58,20 32,34 32,41 39,37 39,34 46,30 46,33 52,30 52,26 58,23" fill="#417835" />
+  <!-- Right Dirt Pixels -->
+  <polygon points="44,37 51,33 51,39 44,43" fill="#74482A" />
+  <polygon points="36,46 42,43 42,49 36,52" fill="#A06A42" />
+</svg>
+
