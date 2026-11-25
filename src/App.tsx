@@ -1,14 +1,16 @@
-import { useEffect, useRef, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CheckCircle2, RotateCcw } from "lucide-react";
 import { BackupModal } from "./components/bonus/BackupModal";
 import { JobExplorer } from "./components/explore/JobExplorer";
 import { MinecraftWorldBackdrop } from "./components/layout/MinecraftWorldBackdrop";
 import { Navbar } from "./components/layout/Navbar";
 import {
-  ComparatorSlotView,
-  ManualFormSlotContent,
-  PipelineSlotView,
-} from "./components/placeholders/TeamSlotViews";
+  ApplicationForm,
+  type NewApplicationInput,
+} from "./components/pipeline/ApplicationForm";
+import { InterviewConflictBanner } from "./components/pipeline/InterviewConflictBanner";
+import { PipelineView } from "./components/pipeline/PipelineView";
+import { ComparatorSlotView } from "./components/placeholders/TeamSlotViews";
 import { Button } from "./components/ui/Button";
 import { Modal } from "./components/ui/Modal";
 import { useLocalStorage } from "./hooks/useLocalStorage";
@@ -17,14 +19,29 @@ import {
   STORAGE_KEYS,
   type ActiveTab,
   type Application,
+  type ApplicationStatus,
   type JobListing,
   type ThemeMode,
 } from "./types";
+import {
+  findInterviewConflicts,
+  getConflictingApplicationIds,
+  shiftLastUpdatedDays,
+} from "./utils/scheduleChecker";
 import {
   createApplicationFromJob,
   isDuplicateApplication,
   normalizeText,
 } from "./utils/skillMatch";
+import {
+  applyStatusTransition,
+  type StatusTransitionPayload,
+} from "./utils/stateMachine";
+
+interface PendingUndoDelete {
+  application: Application;
+  index: number;
+}
 
 export default function App() {
   // Root Persistent State via Custom Hook useLocalStorage<T>
@@ -46,18 +63,23 @@ export default function App() {
   const [isManualFormOpen, setIsManualFormOpen] = useState<boolean>(false);
   const [isBackupModalOpen, setIsBackupModalOpen] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [pendingUndo, setPendingUndo] = useState<PendingUndoDelete | null>(null);
   const toastTimerRef = useRef<number | null>(null);
+  const undoTimerRef = useRef<number | null>(null);
 
   // Sinkronisasi class 'dark' pada elemen <html>
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
-  // Cleanup toast timer saat unmount
+  // Cleanup toast & undo timers saat unmount
   useEffect(() => {
     return () => {
       if (toastTimerRef.current !== null) {
         window.clearTimeout(toastTimerRef.current);
+      }
+      if (undoTimerRef.current !== null) {
+        window.clearTimeout(undoTimerRef.current);
       }
     };
   }, []);
@@ -73,8 +95,16 @@ export default function App() {
     }, 3200);
   };
 
-  // Derived count untuk Navbar badges
+  // Derived state untuk Navbar & Banner Bentrok (lintas filter)
   const totalOffers = applications.filter((app) => app.status === "OFFER").length;
+  const interviewConflicts = useMemo(
+    () => findInterviewConflicts(applications),
+    [applications],
+  );
+  const conflictingIds = useMemo(
+    () => getConflictingApplicationIds(interviewConflicts),
+    [interviewConflicts],
+  );
 
   // Handlers Profil Skill Kapten (immutable)
   const handleAddSkill = (rawSkill: string): boolean => {
@@ -112,6 +142,133 @@ export default function App() {
     showToast(`"${job.title}" (${job.company_name}) disimpan ke Wishlist.`);
   };
 
+  // Handler Tambah Lamaran Manual dari Fitur 2 (Anggota 2)
+  const handleAddManualApplication = (input: NewApplicationInput) => {
+    if (isDuplicateApplication(applications, input.company, input.role)) {
+      return;
+    }
+    const now = new Date().toISOString();
+    const newApplication: Application = {
+      id: crypto.randomUUID(),
+      company: input.company,
+      role: input.role,
+      workMode: input.workMode,
+      status: input.status,
+      requiredSkills: input.requiredSkills,
+      cvVersion: input.cvVersion,
+      appliedDate: input.appliedDate,
+      lastUpdatedAt: now,
+      checklist: [],
+      activityLogs: [
+        {
+          id: crypto.randomUUID(),
+          timestamp: now,
+          message: `Lamaran ditambahkan manual dengan status ${input.status}`,
+        },
+      ],
+    };
+
+    setApplications((prev) => [newApplication, ...prev]);
+    setIsManualFormOpen(false);
+    setActiveTab("pipeline");
+    showToast(
+      `"${input.role}" (${input.company}) ditambahkan ke Pipeline (${input.status}).`,
+    );
+  };
+
+  // Handler Simulasi +15 Hari untuk pengujian Rawan Ghosting (Fitur 3 — Anggota 2)
+  const handleSimulateGhosting = (id: string) => {
+    const now = new Date().toISOString();
+    setApplications((prev) =>
+      prev.map((app) => {
+        if (
+          app.id !== id ||
+          (app.status !== "APPLIED" && app.status !== "SCREENING")
+        ) {
+          return app;
+        }
+        return {
+          ...app,
+          lastUpdatedAt: shiftLastUpdatedDays(app.lastUpdatedAt, 15),
+          activityLogs: [
+            ...app.activityLogs,
+            {
+              id: crypto.randomUUID(),
+              timestamp: now,
+              message: "Simulasi +15 hari dijalankan (uji Rawan Ghosting)",
+            },
+          ],
+        };
+      }),
+    );
+    showToast("Simulasi +15 hari diterapkan pada lamaran.");
+  };
+
+  // Handler Transisi Status via State Machine Engine (Anggota 2)
+  const handleTransitionStatus = (
+    id: string,
+    targetStatus: ApplicationStatus,
+    payload?: StatusTransitionPayload,
+  ) => {
+    try {
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === id
+            ? applyStatusTransition(app, targetStatus, payload)
+            : app,
+        ),
+      );
+      showToast(`Status lamaran diperbarui menjadi ${targetStatus}.`);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : "Gagal memperbarui status lamaran.";
+      showToast(msg);
+    }
+  };
+
+  // Handler Hapus Lamaran + Undo 5 Detik via useRef & clearTimeout (Fitur 6 — Anggota 2)
+  const handleDeleteApplication = (id: string) => {
+    const targetIndex = applications.findIndex((app) => app.id === id);
+    if (targetIndex === -1) return;
+    const targetApp = applications[targetIndex];
+
+    if (undoTimerRef.current !== null) {
+      window.clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+
+    setApplications((prev) => prev.filter((app) => app.id !== id));
+    setPendingUndo({ application: targetApp, index: targetIndex });
+
+    undoTimerRef.current = window.setTimeout(() => {
+      setPendingUndo(null);
+      undoTimerRef.current = null;
+    }, 5000);
+  };
+
+  const handleUndoDelete = () => {
+    if (!pendingUndo) return;
+
+    if (undoTimerRef.current !== null) {
+      window.clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+
+    const { application, index } = pendingUndo;
+    setApplications((prev) => {
+      if (prev.some((item) => item.id === application.id)) {
+        return prev;
+      }
+      const clampedIndex = Math.min(Math.max(0, index), prev.length);
+      const next = [...prev];
+      next.splice(clampedIndex, 0, application);
+      return next;
+    });
+
+    setPendingUndo(null);
+    showToast(`Lamaran "${application.role}" (${application.company}) dikembalikan.`);
+  };
+
   // Handler Bonus Import JSON Backup
   const handleImportBackup = (
     importedSkills: string[],
@@ -147,10 +304,12 @@ export default function App() {
       />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
-        {/*
-          [SLOT INTEGRASI ANGGOTA 2]: Banner Peringatan Bentrok Jadwal Interview
-          Dihitung dari seluruh data `applications` (tetap tampil di atas semua tab).
-        */}
+        {/* Banner Peringatan Bentrok Jadwal Interview (lintas filter, tampil di atas semua tab) */}
+        <InterviewConflictBanner
+          conflicts={interviewConflicts}
+          isPipelineActive={activeTab === "pipeline"}
+          onGoToPipeline={() => setActiveTab("pipeline")}
+        />
 
         {/*
           [SLOT INTEGRASI ANGGOTA 3]: Dashboard 5 Kartu Statistik (Derived State)
@@ -169,10 +328,15 @@ export default function App() {
         )}
 
         {activeTab === "pipeline" && (
-          <PipelineSlotView
+          <PipelineView
             applications={applications}
             kaptenSkills={kaptenSkills}
+            conflictingIds={conflictingIds}
+            onOpenManualForm={() => setIsManualFormOpen(true)}
             onGoToExplore={() => setActiveTab("explore")}
+            onSimulateGhosting={handleSimulateGhosting}
+            onDeleteApplication={handleDeleteApplication}
+            onTransitionStatus={handleTransitionStatus}
           />
         )}
 
@@ -203,24 +367,19 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Modal Slot untuk Form Manual Anggota 2 */}
+      {/* Modal Form Tambah Lamaran Manual (Fitur 2 — Anggota 2) */}
       <Modal
         isOpen={isManualFormOpen}
         onClose={() => setIsManualFormOpen(false)}
         title="Catat Lamaran Manual"
-        subtitle="Gunakan komponen Modal standar Design System (Fitur 2 — Anggota 2)."
+        subtitle="Tambahkan lamaran magang di luar katalog Remotive ke dalam War Room Pipeline."
         size="md"
-        footer={
-          <Button
-            variant="secondary"
-            size="md"
-            onClick={() => setIsManualFormOpen(false)}
-          >
-            Tutup
-          </Button>
-        }
       >
-        <ManualFormSlotContent />
+        <ApplicationForm
+          applications={applications}
+          onSubmit={handleAddManualApplication}
+          onCancel={() => setIsManualFormOpen(false)}
+        />
       </Modal>
 
       {/* Bonus Modal: Export / Import JSON */}
@@ -232,15 +391,44 @@ export default function App() {
         onImportBackup={handleImportBackup}
       />
 
-      {/* Toast Feedback */}
-      {toastMessage && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed right-4 bottom-4 z-50 flex max-w-sm items-center gap-2.5 rounded-[3px] border-2 border-[#52A535] bg-[#171615] px-4 py-3 text-sm font-semibold text-[#F5F4F0] shadow-xl"
-        >
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-[#78D95F]" />
-          <span>{toastMessage}</span>
+      {/* Toast Container (Undo Delete 5 Detik + Feedback Biasa) */}
+      {(pendingUndo || toastMessage) && (
+        <div className="fixed right-4 bottom-4 z-50 flex max-w-md flex-col items-end gap-2">
+          {pendingUndo && (
+            <div
+              role="status"
+              aria-live="assertive"
+              className="flex w-full items-center justify-between gap-3 rounded-[3px] border-2 border-[#E4B853] bg-[#171615] px-4 py-3 text-sm font-semibold text-[#F5F4F0] shadow-xl"
+            >
+              <span className="min-w-0">
+                Lamaran{" "}
+                <strong className="text-[#FCD34D]">
+                  {pendingUndo.application.role}
+                </strong>{" "}
+                ({pendingUndo.application.company}) dihapus.
+              </span>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleUndoDelete}
+                className="shrink-0"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Undo (5d)</span>
+              </Button>
+            </div>
+          )}
+
+          {toastMessage && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="flex items-center gap-2.5 rounded-[3px] border-2 border-[#52A535] bg-[#171615] px-4 py-3 text-sm font-semibold text-[#F5F4F0] shadow-xl"
+            >
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-[#78D95F]" />
+              <span>{toastMessage}</span>
+            </div>
+          )}
         </div>
       )}
       </div>
