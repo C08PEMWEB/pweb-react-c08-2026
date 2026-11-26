@@ -9,6 +9,7 @@ import {
   CheckSquare,
   Clock,
   Compass,
+  Eye,
   FileText,
   Filter,
   Ghost,
@@ -51,6 +52,7 @@ interface PipelineViewProps {
   conflictingIds: ReadonlySet<string>;
   onOpenManualForm: () => void;
   onGoToExplore: () => void;
+  onOpenDetail: (id: string) => void;
   onSimulateGhosting: (id: string) => void;
   onDeleteApplication: (id: string) => void;
   onTransitionStatus: (
@@ -102,6 +104,7 @@ export function PipelineView({
   conflictingIds,
   onOpenManualForm,
   onGoToExplore,
+  onOpenDetail,
   onSimulateGhosting,
   onDeleteApplication,
   onTransitionStatus,
@@ -572,6 +575,15 @@ export function PipelineView({
                 {/* Card Actions */}
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#E6DFD4] pt-3.5 dark:border-[#34312F]">
                   <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onOpenDetail(app.id)}
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      <span>Detail</span>
+                    </Button>
+
                     {!finalStatus && (
                       <Button
                         variant="primary"

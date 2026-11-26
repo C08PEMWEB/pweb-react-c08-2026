@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, RotateCcw } from "lucide-react";
 import { BackupModal } from "./components/bonus/BackupModal";
+import { StatsCards } from "./components/dashboard/StatsCards";
+import { ApplicationDetail } from "./components/detail/ApplicationDetail";
+import { OfferComparator } from "./components/dashboard/OfferComparator";
 import { JobExplorer } from "./components/explore/JobExplorer";
 import { MinecraftWorldBackdrop } from "./components/layout/MinecraftWorldBackdrop";
 import { Navbar } from "./components/layout/Navbar";
@@ -10,7 +13,6 @@ import {
 } from "./components/pipeline/ApplicationForm";
 import { InterviewConflictBanner } from "./components/pipeline/InterviewConflictBanner";
 import { PipelineView } from "./components/pipeline/PipelineView";
-import { ComparatorSlotView } from "./components/placeholders/TeamSlotViews";
 import { Button } from "./components/ui/Button";
 import { Modal } from "./components/ui/Modal";
 import { useLocalStorage } from "./hooks/useLocalStorage";
@@ -64,6 +66,7 @@ export default function App() {
   const [isBackupModalOpen, setIsBackupModalOpen] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [pendingUndo, setPendingUndo] = useState<PendingUndoDelete | null>(null);
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
   const undoTimerRef = useRef<number | null>(null);
 
@@ -287,6 +290,15 @@ export default function App() {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
+  const selectedApplication = applications.find(
+    (app) => app.id === selectedApplicationId,
+  );
+  const handleUpdateApplication = (next: Application) => {
+    setApplications((prev) =>
+      prev.map((app) => (app.id === next.id ? next : app)),
+    );
+  };
+
   return (
     <div className="relative min-h-screen">
       <MinecraftWorldBackdrop theme={theme} />
@@ -311,10 +323,7 @@ export default function App() {
           onGoToPipeline={() => setActiveTab("pipeline")}
         />
 
-        {/*
-          [SLOT INTEGRASI ANGGOTA 3]: Dashboard 5 Kartu Statistik (Derived State)
-          Total Lamaran, Response Rate %, Interview Rate %, Rawan Ghosting, Total Offer.
-        */}
+        <StatsCards applications={applications} />
 
         {activeTab === "explore" && (
           <JobExplorer
@@ -334,6 +343,7 @@ export default function App() {
             conflictingIds={conflictingIds}
             onOpenManualForm={() => setIsManualFormOpen(true)}
             onGoToExplore={() => setActiveTab("explore")}
+            onOpenDetail={setSelectedApplicationId}
             onSimulateGhosting={handleSimulateGhosting}
             onDeleteApplication={handleDeleteApplication}
             onTransitionStatus={handleTransitionStatus}
@@ -341,9 +351,9 @@ export default function App() {
         )}
 
         {activeTab === "comparator" && (
-          <ComparatorSlotView
-            offersCount={totalOffers}
-            onGoToExplore={() => setActiveTab("explore")}
+          <OfferComparator
+            applications={applications}
+            kaptenSkills={kaptenSkills}
           />
         )}
       </main>
@@ -368,6 +378,17 @@ export default function App() {
       </footer>
 
       {/* Modal Form Tambah Lamaran Manual (Fitur 2 — Anggota 2) */}
+      {selectedApplication && (
+        <ApplicationDetail
+          application={selectedApplication}
+          onUpdate={handleUpdateApplication}
+          onTransition={(targetStatus, payload) =>
+            handleTransitionStatus(selectedApplication.id, targetStatus, payload)
+          }
+          onClose={() => setSelectedApplicationId(null)}
+        />
+      )}
+
       <Modal
         isOpen={isManualFormOpen}
         onClose={() => setIsManualFormOpen(false)}
