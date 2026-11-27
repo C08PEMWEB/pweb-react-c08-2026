@@ -140,3 +140,47 @@ export function getCompanyInitials(companyName: string): string {
   if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
   return `${words[0][0]}${words[1][0]}`.toUpperCase();
 }
+
+export interface SkillGapItem {
+  skill: string;
+  count: number;
+}
+
+/**
+ * Derived state: menghitung missing skills yang paling sering diminta
+ * oleh seluruh lamaran Kapten agar Kapten tahu prioritas skill yang perlu dipelajari.
+ */
+export function getTopMissingSkills(
+  applications: readonly Application[],
+  kaptenSkills: readonly string[],
+  limit = 4,
+): SkillGapItem[] {
+  const kaptenSet = new Set(
+    kaptenSkills.map((s) => normalizeText(s)).filter(Boolean),
+  );
+  const frequency = new Map<string, { label: string; count: number }>();
+
+  for (const app of applications) {
+    const seenInApp = new Set<string>();
+    for (const rawSkill of app.requiredSkills) {
+      const trimmed = rawSkill.trim();
+      const key = normalizeText(trimmed);
+      if (!key || kaptenSet.has(key) || seenInApp.has(key)) continue;
+      seenInApp.add(key);
+
+      const existing = frequency.get(key);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        frequency.set(key, { label: trimmed, count: 1 });
+      }
+    }
+  }
+
+  return Array.from(frequency.values())
+    .sort((a, b) =>
+      b.count !== a.count ? b.count - a.count : a.label.localeCompare(b.label),
+    )
+    .slice(0, limit)
+    .map((item) => ({ skill: item.label, count: item.count }));
+}

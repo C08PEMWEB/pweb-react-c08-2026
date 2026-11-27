@@ -5,6 +5,7 @@ import {
   ArrowRightLeft,
   ArrowUpDown,
   CalendarClock,
+  CalendarPlus,
   Check,
   CheckSquare,
   Clock,
@@ -19,7 +20,12 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import type { Application, ApplicationStatus, WorkMode } from "../../types";
+import type {
+  Application,
+  ApplicationStatus,
+  CvDocument,
+  WorkMode,
+} from "../../types";
 import { formatIdrInput, parseIdrInput } from "../../utils/currency";
 import {
   getDaysSinceUpdate,
@@ -50,12 +56,14 @@ export type PipelineSortOption = "newest" | "interview-asc" | "offer-desc";
 interface PipelineViewProps {
   applications: Application[];
   kaptenSkills: string[];
+  cvVault: readonly CvDocument[];
   conflictingIds: ReadonlySet<string>;
   onOpenManualForm: () => void;
   onGoToExplore: () => void;
   onOpenDetail: (id: string) => void;
   onSimulateGhosting: (id: string) => void;
   onDeleteApplication: (id: string) => void;
+  onDownloadIcs: (app: Application) => void;
   onTransitionStatus: (
     id: string,
     targetStatus: ApplicationStatus,
@@ -102,12 +110,14 @@ function getTodayDateString(): string {
 export function PipelineView({
   applications,
   kaptenSkills,
+  cvVault,
   conflictingIds,
   onOpenManualForm,
   onGoToExplore,
   onOpenDetail,
   onSimulateGhosting,
   onDeleteApplication,
+  onDownloadIcs,
   onTransitionStatus,
 }: PipelineViewProps) {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -605,6 +615,18 @@ export function PipelineView({
                         <span>Simulasi +15 Hari</span>
                       </Button>
                     )}
+
+                    {app.status === "INTERVIEW" && app.interviewDateTime && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => onDownloadIcs(app)}
+                        title="Unduh jadwal interview dalam format kalender (.ics)"
+                      >
+                        <CalendarPlus className="h-3.5 w-3.5" />
+                        <span>Simpan .ics</span>
+                      </Button>
+                    )}
                   </div>
 
                   <Button
@@ -709,6 +731,23 @@ export function PipelineView({
                     placeholder="Contoh: CV-FE-v2"
                     className="mc-input px-3 py-2"
                   />
+                  {cvVault.length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {cvVault.map((doc) => (
+                        <button
+                          key={doc.id}
+                          type="button"
+                          onClick={() => {
+                            setCvVersion(doc.versionLabel);
+                            setTransitionError(null);
+                          }}
+                          className="cursor-pointer rounded-[2px] border border-[#94BEFB] bg-[#E4F0FF] px-2 py-0.5 text-xs font-semibold text-[#1742A8] transition hover:bg-[#D2E5FF] dark:border-[#2F5DA0] dark:bg-[#162845] dark:text-[#93C5FD]"
+                        >
+                          {doc.versionLabel}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label

@@ -72,10 +72,15 @@ src/
 7. **Fitur 7 — Dashboard Statistik & Offer Comparator:**
    - 5 Kartu Statistik (*Total Lamaran*, *Response Rate %*, *Interview Rate %*, *Rawan Ghosting*, *Total Offer*) sebagai derived state.
    - Perbandingan **Offer A vs Offer B** saat Offer >= 2 dengan rumus berbobot (Uang Saku 50%, Mode Kerja 25%, Kecocokan Skill 25%) + badge **Rekomendasi Terbaik**.
-8. **Fitur Bonus:**
+8. **Fitur Bonus & Unik:**
+   - **Asisten Maskot "Pak Villager" (Template Q&A Chatbox):** Maskot Minecraft Villager Librarian mengambang di kanan bawah dengan chatbox tanya-jawab template interaktif + pencocokan kata kunci yang membaca kondisi live lamaran, skill, dan CV Vault Kapten (tanpa API AI eksternal).
+   - **CV Vault & Auto-Scan Skill:** Unggah beberapa versi CV (`.pdf`, `.txt`, `.md`) ke `localStorage`, preview langsung lewat Blob URL (`URL.revokeObjectURL` cleanup), deteksi skill otomatis dari isi CV untuk 1-klik tambah ke Profil Kapten, lacak statistik performa tiap versi CV, dan pilih cepat versi CV saat melamar (`APPLIED`).
+   - **Generator Follow-Up HRD (Anti-Ghosting):** Buat draf pesan tindak lanjut HRD otomatis (Formal ID / Singkat DM / English) yang terisi data lamaran & skill cocok, lengkap dengan 1-klik Salin (otomatis tercatat di `activityLogs`) dan tombol buka email (`mailto:`).
+   - **Export Jadwal Interview (`.ics`):** Unduh file kalender standar RFC 5545 (durasi 60 menit + pengingat 30 menit sebelumnya) langsung untuk Google/Apple Calendar.
+   - **Radar Prioritas Belajar (Skill Gap):** Derived state di sidebar yang merangkum missing skills paling sering diminta di seluruh lamaran Kapten.
    - **Tema Siang ↔ Malam** (*Overworld Day* ↔ *Deepslate Night* lengkap dengan latar desa Minecraft berubah sesuai tema) menggunakan `useLocalStorage`.
    - **Keyboard Shortcut `/`** untuk fokus otomatis ke search bar via `useRef`.
-   - **Export & Import Backup JSON** dengan validasi tipe ketat.
+   - **Export & Import Backup JSON** (termasuk CV Vault) dengan validasi tipe ketat.
 
 ---
 

@@ -6,7 +6,7 @@ import {
   FileJson,
   Upload,
 } from "lucide-react";
-import type { Application } from "../../types";
+import type { Application, CvDocument } from "../../types";
 import { downloadBackupJson, parseBackupJson } from "../../utils/backup";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
@@ -16,7 +16,12 @@ interface BackupModalProps {
   onClose: () => void;
   kaptenSkills: string[];
   applications: Application[];
-  onImportBackup: (skills: string[], apps: Application[]) => void;
+  cvVault: CvDocument[];
+  onImportBackup: (
+    skills: string[],
+    apps: Application[],
+    cvVault?: CvDocument[],
+  ) => void;
 }
 
 export function BackupModal({
@@ -24,6 +29,7 @@ export function BackupModal({
   onClose,
   kaptenSkills,
   applications,
+  cvVault,
   onImportBackup,
 }: BackupModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -33,10 +39,10 @@ export function BackupModal({
   } | null>(null);
 
   const handleExport = () => {
-    downloadBackupJson(kaptenSkills, applications);
+    downloadBackupJson(kaptenSkills, applications, cvVault);
     setFeedback({
       type: "success",
-      text: `Backup berhasil diunduh (${kaptenSkills.length} skill & ${applications.length} lamaran).`,
+      text: `Backup berhasil diunduh (${kaptenSkills.length} skill, ${applications.length} lamaran, ${cvVault.length} CV).`,
     });
   };
 
@@ -49,10 +55,12 @@ export function BackupModal({
       try {
         const content = typeof reader.result === "string" ? reader.result : "";
         const data = parseBackupJson(content);
-        onImportBackup(data.kaptenSkills, data.applications);
+        onImportBackup(data.kaptenSkills, data.applications, data.cvVault);
+        const cvCountText =
+          data.cvVault !== undefined ? `, ${data.cvVault.length} CV` : "";
         setFeedback({
           type: "success",
-          text: `Berhasil memulihkan ${data.kaptenSkills.length} skill dan ${data.applications.length} lamaran dari JSON.`,
+          text: `Berhasil memulihkan ${data.kaptenSkills.length} skill, ${data.applications.length} lamaran${cvCountText} dari JSON.`,
         });
       } catch (err: unknown) {
         const message =
@@ -103,7 +111,11 @@ export function BackupModal({
               <strong className="mc-tabular font-mono text-[#171615] dark:text-white">
                 {applications.length}
               </strong>{" "}
-              lamaran magang
+              lamaran magang &middot;{" "}
+              <strong className="mc-tabular font-mono text-[#171615] dark:text-white">
+                {cvVault.length}
+              </strong>{" "}
+              CV tersimpan
             </p>
           </div>
         </div>

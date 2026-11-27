@@ -62,17 +62,30 @@ export interface SkillMatchResult {
   level: MatchLevel;
 }
 
+export interface CvDocument {
+  id: string;
+  versionLabel: string;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  uploadedAt: string; // ISO string
+  dataUrl: string;
+  detectedSkills: string[];
+}
+
 export interface BackupData {
   version: 1;
   exportedAt: string;
   kaptenSkills: string[];
   applications: Application[];
+  cvVault?: CvDocument[];
 }
 
 export const STORAGE_KEYS = {
   APPLICATIONS: "aku-mw-magang:applications",
   SKILLS: "aku-mw-magang:kapten-skills",
   THEME: "aku-mw-magang:theme",
+  CV_VAULT: "aku-mw-magang:cv-vault",
 } as const;
 
 export const DEFAULT_KAPTEN_SKILLS: string[] = [

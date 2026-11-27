@@ -4,6 +4,7 @@ import type {
   ApplicationStatus,
   BackupData,
   ChecklistItem,
+  CvDocument,
   WorkMode,
 } from "../types";
 
@@ -83,23 +84,40 @@ function isApplication(value: unknown): value is Application {
   return true;
 }
 
+function isCvDocument(value: unknown): value is CvDocument {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === "string" &&
+    typeof value.versionLabel === "string" &&
+    typeof value.fileName === "string" &&
+    typeof value.mimeType === "string" &&
+    typeof value.sizeBytes === "number" &&
+    typeof value.uploadedAt === "string" &&
+    typeof value.dataUrl === "string" &&
+    isStringArray(value.detectedSkills)
+  );
+}
+
 export function createBackupPayload(
   kaptenSkills: string[],
   applications: Application[],
+  cvVault: CvDocument[] = [],
 ): BackupData {
   return {
     version: 1,
     exportedAt: new Date().toISOString(),
     kaptenSkills,
     applications,
+    cvVault,
   };
 }
 
 export function downloadBackupJson(
   kaptenSkills: string[],
   applications: Application[],
+  cvVault: CvDocument[] = [],
 ): void {
-  const payload = createBackupPayload(kaptenSkills, applications);
+  const payload = createBackupPayload(kaptenSkills, applications, cvVault);
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json",
   });
@@ -134,6 +152,11 @@ export function parseBackupJson(rawText: string): BackupData {
     throw new Error("Field 'applications' tidak valid atau korup.");
   }
 
+  const cvVault =
+    Array.isArray(parsed.cvVault) && parsed.cvVault.every(isCvDocument)
+      ? parsed.cvVault
+      : undefined;
+
   return {
     version: 1,
     exportedAt:
@@ -142,5 +165,6 @@ export function parseBackupJson(rawText: string): BackupData {
         : new Date().toISOString(),
     kaptenSkills: parsed.kaptenSkills.map((s) => s.trim()).filter(Boolean),
     applications: parsed.applications,
+    cvVault,
   };
 }

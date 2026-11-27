@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from "react";
 import { AlertCircle, Plus } from "lucide-react";
-import type { Application, WorkMode } from "../../types";
+import type { Application, CvDocument, WorkMode } from "../../types";
 import { isDuplicateApplication } from "../../utils/skillMatch";
 import { Button } from "../ui/Button";
 
@@ -16,6 +16,7 @@ export interface NewApplicationInput {
 
 interface ApplicationFormProps {
   applications: readonly Application[];
+  cvVault?: readonly CvDocument[];
   onSubmit: (input: NewApplicationInput) => void;
   onCancel: () => void;
 }
@@ -56,6 +57,7 @@ function parseSkillsInput(raw: string): string[] {
  */
 export function ApplicationForm({
   applications,
+  cvVault = [],
   onSubmit,
   onCancel,
 }: ApplicationFormProps) {
@@ -303,6 +305,23 @@ export function ApplicationForm({
               placeholder="Contoh: CV-FE-v2"
               className="mc-input px-3 py-2"
             />
+            {cvVault.length > 0 && (
+              <div className="mt-1.5 flex flex-wrap gap-1">
+                {cvVault.map((doc) => (
+                  <button
+                    key={doc.id}
+                    type="button"
+                    onClick={() => {
+                      setCvVersion(doc.versionLabel);
+                      clearFieldError("cvVersion");
+                    }}
+                    className="cursor-pointer rounded-[2px] border border-[#94BEFB] bg-white px-2 py-0.5 text-xs font-semibold text-[#1742A8] transition hover:bg-[#E4F0FF] dark:border-[#2F5DA0] dark:bg-[#1E2E47] dark:text-[#93C5FD]"
+                  >
+                    {doc.versionLabel}
+                  </button>
+                ))}
+              </div>
+            )}
             {errors.cvVersion && (
               <p
                 role="alert"

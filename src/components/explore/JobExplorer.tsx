@@ -20,6 +20,7 @@ import type {
 } from "../../types";
 import {
   calculateSkillMatch,
+  getTopMissingSkills,
   isDuplicateApplication,
   normalizeText,
 } from "../../utils/skillMatch";
@@ -145,6 +146,12 @@ export function JobExplorer({
     setSortBy("match-desc");
   };
 
+  // Derived state: Top missing skills dari lamaran Kapten untuk Skill Gap Radar
+  const topMissingSkills = useMemo(
+    () => getTopMissingSkills(applications, kaptenSkills, 4),
+    [applications, kaptenSkills],
+  );
+
   // Derived state: daftar kategori unik dari lowongan yang dimuat
   const categories = useMemo(() => {
     const unique = new Set<string>();
@@ -225,6 +232,7 @@ export function JobExplorer({
         <div className="lg:col-span-4 xl:col-span-3">
           <SkillProfilePanel
             skills={kaptenSkills}
+            topMissingSkills={topMissingSkills}
             onAddSkill={onAddSkill}
             onRemoveSkill={onRemoveSkill}
             onResetSkills={onResetSkills}

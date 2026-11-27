@@ -5,15 +5,17 @@ import {
   Globe,
   Plus,
   RotateCcw,
+  Target,
   X,
 } from "lucide-react";
 import { DEFAULT_KAPTEN_SKILLS, type JobSource } from "../../types";
-import { normalizeText } from "../../utils/skillMatch";
+import { normalizeText, type SkillGapItem } from "../../utils/skillMatch";
 import { Button } from "../ui/Button";
 import { VoxelPickaxeIcon } from "../ui/MinecraftIcons";
 
 interface SkillProfilePanelProps {
   skills: string[];
+  topMissingSkills?: readonly SkillGapItem[];
   onAddSkill: (skill: string) => boolean;
   onRemoveSkill: (skill: string) => void;
   onResetSkills: () => void;
@@ -34,6 +36,7 @@ const SUGGESTED_SKILLS = [
 
 export function SkillProfilePanel({
   skills,
+  topMissingSkills = [],
   onAddSkill,
   onRemoveSkill,
   onResetSkills,
@@ -189,6 +192,36 @@ export function SkillProfilePanel({
               </div>
             )}
           </div>
+
+          {/* Radar Skill Gap (Derived State dari Lamaran Kapten) */}
+          {topMissingSkills.length > 0 && (
+            <div className="border-t border-[#E4DDD1] pt-3 dark:border-[#302D2B]">
+              <span className="mb-1.5 flex items-center gap-1.5 text-xs font-bold tracking-wider text-[#921616] uppercase dark:text-[#FCA5A5]">
+                <Target className="h-3.5 w-3.5 shrink-0" />
+                <span>Prioritas Belajar</span>
+              </span>
+              <p className="mb-2 text-xs text-[#57524B] dark:text-[#B5AFA7]">
+                Sering diminta di lamaranmu yang belum dikuasai:
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {topMissingSkills.map((item) => (
+                  <button
+                    key={item.skill}
+                    type="button"
+                    onClick={() => handleQuickAdd(item.skill)}
+                    title={`Diminta oleh ${item.count} lamaran · Klik untuk menambahkan`}
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-[3px] border border-[#E89B96] bg-[#FDE7E6] px-2.5 py-1 text-xs font-semibold text-[#921616] transition hover:border-[#2F7020] hover:bg-[#E3F4DE] hover:text-[#1F5314] dark:border-[#962A2A] dark:bg-[#3A1616] dark:text-[#FCA5A5] dark:hover:border-[#5EB841] dark:hover:bg-[#193516] dark:hover:text-[#91EB7A]"
+                  >
+                    <Plus className="h-3 w-3" />
+                    <span>{item.skill}</span>
+                    <span className="mc-tabular font-mono opacity-80">
+                      ({item.count})
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Tambah Cepat */}
           {availableSuggestions.length > 0 && (

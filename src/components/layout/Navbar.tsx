@@ -2,6 +2,7 @@ import {
   ChevronRight,
   Compass,
   DatabaseBackup,
+  FileText,
   KanbanSquare,
   Moon,
   Plus,
@@ -16,10 +17,12 @@ interface NavbarProps {
   onTabChange: (tab: ActiveTab) => void;
   totalApplications: number;
   totalOffers: number;
+  cvCount: number;
   theme: ThemeMode;
   onToggleTheme: () => void;
   onOpenManualForm: () => void;
   onOpenBackupModal: () => void;
+  onOpenCvVault: () => void;
 }
 
 /**
@@ -32,10 +35,12 @@ export function Navbar({
   onTabChange,
   totalApplications,
   totalOffers,
+  cvCount,
   theme,
   onToggleTheme,
   onOpenManualForm,
   onOpenBackupModal,
+  onOpenCvVault,
 }: NavbarProps) {
   const navItems: Array<{
     id: ActiveTab;
@@ -73,10 +78,10 @@ export function Navbar({
         <button
           type="button"
           onClick={() => onTabChange("explore")}
-          className="group flex min-w-0 shrink cursor-pointer items-center gap-2.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6CC349]"
+          className="group flex min-w-0 shrink cursor-pointer items-center gap-2 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6CC349] sm:gap-2.5"
         >
-          <GrassBlockLogo className="h-8 w-8 shrink-0 transition-transform duration-150 group-hover:-translate-y-0.5" />
-          <span className="truncate font-pixel text-sm font-bold tracking-tight text-white sm:text-base">
+          <GrassBlockLogo className="h-7 w-7 shrink-0 transition-transform duration-150 group-hover:-translate-y-0.5 sm:h-8 sm:w-8" />
+          <span className="truncate font-pixel text-xs font-bold tracking-tight text-white sm:text-base">
             AKU MW <span className="text-[#78D95F]">MAGANG</span>
           </span>
         </button>
@@ -123,14 +128,30 @@ export function Navbar({
           })}
         </nav>
 
-        {/* Right: Backup + Theme Toggle + Signature Minecraft.net CTA */}
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        {/* Right: CV Vault + Backup + Theme Toggle + Signature Minecraft.net CTA */}
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <button
+            type="button"
+            onClick={onOpenCvVault}
+            title="CV Vault — Unggah & kelola versi CV"
+            aria-label={`Buka CV Vault (${cvCount} file tersimpan)`}
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-[3px] border border-[#3B3835] bg-[#22201F] p-1.5 text-xs font-semibold text-[#DDD7CF] transition hover:border-[#6CC349] hover:text-white focus-visible:outline-2 focus-visible:outline-[#6CC349] sm:px-2.5 sm:py-2"
+          >
+            <FileText className="h-4 w-4 shrink-0 text-[#86E270]" />
+            <span className="hidden xl:inline">CV Vault</span>
+            {cvCount > 0 && (
+              <span className="mc-tabular rounded-[2px] bg-[#244D1B] px-1.5 py-0.5 font-mono text-xs font-bold text-[#98F281]">
+                {cvCount}
+              </span>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={onOpenBackupModal}
             title="Export / Import Backup JSON"
             aria-label="Buka backup dan restore JSON"
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded-[3px] border border-[#3B3835] bg-[#22201F] px-2 py-2 text-xs font-semibold text-[#DDD7CF] transition hover:border-[#6CC349] hover:text-white focus-visible:outline-2 focus-visible:outline-[#6CC349] sm:px-2.5"
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-[3px] border border-[#3B3835] bg-[#22201F] p-1.5 text-xs font-semibold text-[#DDD7CF] transition hover:border-[#6CC349] hover:text-white focus-visible:outline-2 focus-visible:outline-[#6CC349] sm:px-2.5 sm:py-2"
           >
             <DatabaseBackup className="h-4 w-4 shrink-0" />
             <span className="hidden xl:inline">Backup</span>
@@ -149,7 +170,7 @@ export function Navbar({
                 ? "Aktifkan Overworld Light Mode"
                 : "Aktifkan Deepslate Dark Mode"
             }
-            className="inline-flex cursor-pointer items-center justify-center rounded-[3px] border border-[#3B3835] bg-[#22201F] p-2 text-[#FCD34D] transition hover:border-[#6CC349] hover:bg-[#2C2A28] focus-visible:outline-2 focus-visible:outline-[#6CC349]"
+            className="inline-flex cursor-pointer items-center justify-center rounded-[3px] border border-[#3B3835] bg-[#22201F] p-1.5 text-[#FCD34D] transition hover:border-[#6CC349] hover:bg-[#2C2A28] focus-visible:outline-2 focus-visible:outline-[#6CC349] sm:p-2"
           >
             {theme === "dark" ? (
               <Sun className="h-4 w-4" />

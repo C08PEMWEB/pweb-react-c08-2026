@@ -1,5 +1,10 @@
 import { useId, useState } from 'react'
-import type { Application, ApplicationStatus, WorkMode } from '../../types'
+import type {
+  Application,
+  ApplicationStatus,
+  CvDocument,
+  WorkMode,
+} from '../../types'
 import { formatIdrInput, parseIdrInput } from '../../utils/currency'
 import {
   getAllowedNextStatuses,
@@ -16,6 +21,7 @@ import { Button } from '../ui/Button'
 
 interface StatusTransitionPanelProps {
   application: Application
+  cvVault?: readonly CvDocument[]
   onTransition: (target: ApplicationStatus, payload: StatusTransitionPayload) => void
 }
 
@@ -25,6 +31,7 @@ function getTodayDateString(): string {
 
 export function StatusTransitionPanel({
   application,
+  cvVault = [],
   onTransition,
 }: StatusTransitionPanelProps) {
   const uid = useId()
@@ -131,6 +138,23 @@ export function StatusTransitionPanel({
               placeholder="Contoh: CV-FE-v2"
               className="mc-input px-3 py-2"
             />
+            {cvVault.length > 0 && (
+              <div className="mt-1.5 flex flex-wrap gap-1">
+                {cvVault.map((doc) => (
+                  <button
+                    key={doc.id}
+                    type="button"
+                    onClick={() => {
+                      setCvVersion(doc.versionLabel)
+                      setError(null)
+                    }}
+                    className="cursor-pointer rounded-[2px] border border-[#94BEFB] bg-[#E4F0FF] px-2 py-0.5 text-xs font-semibold text-[#1742A8] transition hover:bg-[#D2E5FF] dark:border-[#2F5DA0] dark:bg-[#162845] dark:text-[#93C5FD]"
+                  >
+                    {doc.versionLabel}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <label

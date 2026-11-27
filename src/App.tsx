@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Ghost, RotateCcw, Trash2 } from "lucide-react";
 import { BackupModal } from "./components/bonus/BackupModal";
+import { CvVaultModal } from "./components/bonus/CvVaultModal";
+import { MascotAssistant } from "./components/bonus/MascotAssistant";
 import { StatsCards } from "./components/dashboard/StatsCards";
 import { ApplicationDetail } from "./components/detail/ApplicationDetail";
 import { OfferComparator } from "./components/dashboard/OfferComparator";
@@ -22,9 +24,12 @@ import {
   type ActiveTab,
   type Application,
   type ApplicationStatus,
+  type CvDocument,
   type JobListing,
   type ThemeMode,
 } from "./types";
+import type { MascotActionType } from "./utils/assistantTemplates";
+import { downloadInterviewIcs } from "./utils/calendarIcs";
 import {
   findInterviewConflicts,
   getConflictingApplicationIds,
@@ -60,10 +65,17 @@ export default function App() {
     STORAGE_KEYS.THEME,
     "dark",
   );
+  // Bonus: CV Vault persisten memakai useLocalStorage
+  const [cvVault, setCvVault] = useLocalStorage<CvDocument[]>(
+    STORAGE_KEYS.CV_VAULT,
+    [],
+  );
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("explore");
   const [isManualFormOpen, setIsManualFormOpen] = useState<boolean>(false);
   const [isBackupModalOpen, setIsBackupModalOpen] = useState<boolean>(false);
+  const [isCvVaultOpen, setIsCvVaultOpen] = useState<boolean>(false);
+  const [previewCvId, setPreviewCvId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [pendingUndo, setPendingUndo] = useState<PendingUndoDelete | null>(null);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
@@ -280,15 +292,68 @@ export default function App() {
     showToast(`Lamaran "${application.role}" (${application.company}) dikembalikan.`);
   };
 
+  // Handler Bonus CV Vault & Kalender ICS
+  const handleAddCv = (doc: CvDocument) => {
+    setCvVault((prev) => [doc, ...prev]);
+    showToast(`CV "${doc.versionLabel}" tersimpan di CV Vault.`);
+  };
+
+  const handleDeleteCv = (id: string) => {
+    const target = cvVault.find((doc) => doc.id === id);
+    setCvVault((prev) => prev.filter((doc) => doc.id !== id));
+    if (target) {
+      showToast(`CV "${target.versionLabel}" dihapus dari CV Vault.`);
+    }
+  };
+
+  const handleAddMultipleSkills = (skillsToAdd: string[]): number => {
+    const existingSet = new Set(kaptenSkills.map((s) => normalizeText(s)));
+    const uniqueNew: string[] = [];
+
+    for (const raw of skillsToAdd) {
+      const trimmed = raw.trim();
+      const key = normalizeText(trimmed);
+      if (trimmed && !existingSet.has(key)) {
+        existingSet.add(key);
+        uniqueNew.push(trimmed);
+      }
+    }
+
+    if (uniqueNew.length > 0) {
+      setKaptenSkills((prev) => [...prev, ...uniqueNew]);
+      showToast(`${uniqueNew.length} skill baru ditambahkan ke Profil Kapten.`);
+    }
+    return uniqueNew.length;
+  };
+
+  const handlePreviewCvFromDetail = (cvId: string) => {
+    setSelectedApplicationId(null);
+    setPreviewCvId(cvId);
+    setIsCvVaultOpen(true);
+  };
+
+  const handleDownloadIcs = (app: Application) => {
+    const ok = downloadInterviewIcs(app);
+    if (ok) {
+      showToast(`Jadwal interview ${app.company} diunduh (.ics).`);
+    } else {
+      showToast("Jadwal interview belum valid untuk diekspor ke kalender.");
+    }
+  };
+
   // Handler Bonus Import JSON Backup
   const handleImportBackup = (
     importedSkills: string[],
     importedApplications: Application[],
+    importedCvVault?: CvDocument[],
   ) => {
     setKaptenSkills(
       importedSkills.length > 0 ? importedSkills : DEFAULT_KAPTEN_SKILLS,
     );
     setApplications(importedApplications);
+    if (importedCvVault !== undefined) {
+      setCvVault(importedCvVault);
+    }
     showToast(
       `Data dipulihkan: ${importedApplications.length} lamaran & ${importedSkills.length} skill.`,
     );
@@ -296,6 +361,27 @@ export default function App() {
 
   const handleToggleTheme = () => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
+
+  const handleMascotAction = (action: MascotActionType) => {
+    switch (action) {
+      case "tab:explore":
+        setActiveTab("explore");
+        break;
+      case "tab:pipeline":
+        setActiveTab("pipeline");
+        break;
+      case "tab:comparator":
+        setActiveTab("comparator");
+        break;
+      case "modal:cv":
+        setPreviewCvId(null);
+        setIsCvVaultOpen(true);
+        break;
+      case "modal:manual":
+        setIsManualFormOpen(true);
+        break;
+    }
   };
 
   const selectedApplication = applications.find(
@@ -313,15 +399,20 @@ export default function App() {
 
       <div className="relative z-10 flex min-h-screen flex-col">
         <Navbar
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        totalApplications={applications.length}
-        totalOffers={totalOffers}
-        theme={theme}
-        onToggleTheme={handleToggleTheme}
-        onOpenManualForm={() => setIsManualFormOpen(true)}
-        onOpenBackupModal={() => setIsBackupModalOpen(true)}
-      />
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          totalApplications={applications.length}
+          totalOffers={totalOffers}
+          cvCount={cvVault.length}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
+          onOpenManualForm={() => setIsManualFormOpen(true)}
+          onOpenBackupModal={() => setIsBackupModalOpen(true)}
+          onOpenCvVault={() => {
+            setPreviewCvId(null);
+            setIsCvVaultOpen(true);
+          }}
+        />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
         {/* Banner Peringatan Bentrok Jadwal Interview (lintas filter, tampil di atas semua tab) */}
@@ -348,12 +439,14 @@ export default function App() {
           <PipelineView
             applications={applications}
             kaptenSkills={kaptenSkills}
+            cvVault={cvVault}
             conflictingIds={conflictingIds}
             onOpenManualForm={() => setIsManualFormOpen(true)}
             onGoToExplore={() => setActiveTab("explore")}
             onOpenDetail={setSelectedApplicationId}
             onSimulateGhosting={handleSimulateGhosting}
             onDeleteApplication={handleDeleteApplication}
+            onDownloadIcs={handleDownloadIcs}
             onTransitionStatus={handleTransitionStatus}
           />
         )}
@@ -390,10 +483,14 @@ export default function App() {
       {selectedApplication && (
         <ApplicationDetail
           application={selectedApplication}
+          kaptenSkills={kaptenSkills}
+          cvVault={cvVault}
           onUpdate={handleUpdateApplication}
           onTransition={(targetStatus, payload) =>
             handleTransitionStatus(selectedApplication.id, targetStatus, payload)
           }
+          onPreviewCv={handlePreviewCvFromDetail}
+          onDownloadIcs={handleDownloadIcs}
           onClose={() => setSelectedApplicationId(null)}
           headerActions={
             <>
@@ -430,10 +527,27 @@ export default function App() {
       >
         <ApplicationForm
           applications={applications}
+          cvVault={cvVault}
           onSubmit={handleAddManualApplication}
           onCancel={() => setIsManualFormOpen(false)}
         />
       </Modal>
+
+      {/* Bonus Modal: CV Vault & Auto-Scan Skill */}
+      <CvVaultModal
+        isOpen={isCvVaultOpen}
+        onClose={() => {
+          setIsCvVaultOpen(false);
+          setPreviewCvId(null);
+        }}
+        cvVault={cvVault}
+        applications={applications}
+        kaptenSkills={kaptenSkills}
+        initialPreviewCvId={previewCvId}
+        onAddCv={handleAddCv}
+        onDeleteCv={handleDeleteCv}
+        onAddSkillsToProfile={handleAddMultipleSkills}
+      />
 
       {/* Bonus Modal: Export / Import JSON */}
       <BackupModal
@@ -441,12 +555,22 @@ export default function App() {
         onClose={() => setIsBackupModalOpen(false)}
         kaptenSkills={kaptenSkills}
         applications={applications}
+        cvVault={cvVault}
         onImportBackup={handleImportBackup}
       />
 
-      {/* Toast Container (Undo Delete 5 Detik + Feedback Biasa) */}
+      {/* Floating Minecraft Villager Mentor Mascot & Template Chatbox */}
+      <MascotAssistant
+        applications={applications}
+        kaptenSkills={kaptenSkills}
+        cvVault={cvVault}
+        activeTab={activeTab}
+        onAction={handleMascotAction}
+      />
+
+      {/* Toast Container (Undo Delete 5 Detik + Feedback Biasa — kiri bawah agar bebas tabrakan dengan Mascot) */}
       {(pendingUndo || toastMessage) && (
-        <div className="fixed right-4 bottom-4 z-50 flex max-w-md flex-col items-end gap-2">
+        <div className="fixed bottom-4 left-4 z-50 flex max-w-[calc(100vw-6rem)] flex-col items-start gap-2 sm:bottom-5 sm:left-5 sm:max-w-md">
           {pendingUndo && (
             <div
               role="status"
