@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import type { Application, ApplicationStatus, WorkMode } from '../../types'
+import { formatIdrInput, parseIdrInput } from '../../utils/currency'
 import {
   getAllowedNextStatuses,
   isFinalStatus,
@@ -36,7 +37,9 @@ export function StatusTransitionPanel({
     application.interviewDateTime ?? '',
   )
   const [salaryOfferText, setSalaryOfferText] = useState(
-    application.salaryOffer !== undefined ? String(application.salaryOffer) : '',
+    application.salaryOffer !== undefined
+      ? formatIdrInput(String(application.salaryOffer))
+      : '',
   )
   const [workMode, setWorkMode] = useState<WorkMode>(application.workMode)
   const [error, setError] = useState<string | null>(null)
@@ -68,15 +71,11 @@ export function StatusTransitionPanel({
   const handleConfirm = () => {
     if (target === null) return
 
-    const parsedSalary = Number(salaryOfferText)
     const payload: StatusTransitionPayload = {
       cvVersion: cvVersion.trim() || undefined,
       appliedDate: appliedDate.trim() || undefined,
       interviewDateTime: interviewDateTime.trim() || undefined,
-      salaryOffer:
-        salaryOfferText.trim().length > 0 && Number.isFinite(parsedSalary)
-          ? parsedSalary
-          : undefined,
+      salaryOffer: parseIdrInput(salaryOfferText),
       workMode,
     }
 
@@ -184,18 +183,26 @@ export function StatusTransitionPanel({
             >
               Gaji Offer (Rp / bulan) *
             </label>
-            <input
-              id={`${uid}-salary-offer`}
-              type="number"
-              min={1}
-              value={salaryOfferText}
-              onChange={(event) => {
-                setSalaryOfferText(event.target.value)
-                setError(null)
-              }}
-              placeholder="Contoh: 5500000"
-              className="mc-input px-3 py-2"
-            />
+            <div className="relative">
+              <span
+                className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-mono text-xs font-bold text-[#615B53] dark:text-[#A39C93]"
+                aria-hidden="true"
+              >
+                Rp
+              </span>
+              <input
+                id={`${uid}-salary-offer`}
+                type="text"
+                inputMode="numeric"
+                value={salaryOfferText}
+                onChange={(event) => {
+                  setSalaryOfferText(formatIdrInput(event.target.value))
+                  setError(null)
+                }}
+                placeholder="5.500.000"
+                className="mc-input mc-tabular py-2 pr-3 pl-9 font-mono"
+              />
+            </div>
           </div>
           <div>
             <label

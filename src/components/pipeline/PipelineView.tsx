@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import type { Application, ApplicationStatus, WorkMode } from "../../types";
+import { formatIdrInput, parseIdrInput } from "../../utils/currency";
 import {
   getDaysSinceUpdate,
   isRawanGhosting,
@@ -136,7 +137,9 @@ export function PipelineView({
     setAppliedDate(app.appliedDate ?? getTodayDateString());
     setInterviewDateTime(app.interviewDateTime ?? "");
     setSalaryOfferText(
-      app.salaryOffer !== undefined ? String(app.salaryOffer) : "",
+      app.salaryOffer !== undefined
+        ? formatIdrInput(String(app.salaryOffer))
+        : "",
     );
     setOfferWorkMode(app.workMode);
     setTransitionError(null);
@@ -150,15 +153,11 @@ export function PipelineView({
   const handleConfirmTransition = () => {
     if (!transitionTargetApp) return;
 
-    const parsedSalary = Number(salaryOfferText);
     const payload: StatusTransitionPayload = {
       cvVersion: cvVersion.trim() || undefined,
       appliedDate: appliedDate.trim() || undefined,
       interviewDateTime: interviewDateTime.trim() || undefined,
-      salaryOffer:
-        salaryOfferText.trim().length > 0 && Number.isFinite(parsedSalary)
-          ? parsedSalary
-          : undefined,
+      salaryOffer: parseIdrInput(salaryOfferText),
       workMode: offerWorkMode,
     };
 
@@ -764,18 +763,26 @@ export function PipelineView({
                   >
                     Gaji Offer (Rp / bulan) *
                   </label>
-                  <input
-                    id="transition-salary"
-                    type="number"
-                    min={1}
-                    value={salaryOfferText}
-                    onChange={(e) => {
-                      setSalaryOfferText(e.target.value);
-                      setTransitionError(null);
-                    }}
-                    placeholder="Contoh: 5500000"
-                    className="mc-input px-3 py-2"
-                  />
+                  <div className="relative">
+                    <span
+                      className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-mono text-xs font-bold text-[#615B53] dark:text-[#A39C93]"
+                      aria-hidden="true"
+                    >
+                      Rp
+                    </span>
+                    <input
+                      id="transition-salary"
+                      type="text"
+                      inputMode="numeric"
+                      value={salaryOfferText}
+                      onChange={(e) => {
+                        setSalaryOfferText(formatIdrInput(e.target.value));
+                        setTransitionError(null);
+                      }}
+                      placeholder="5.500.000"
+                      className="mc-input mc-tabular py-2 pr-3 pl-9 font-mono"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label
