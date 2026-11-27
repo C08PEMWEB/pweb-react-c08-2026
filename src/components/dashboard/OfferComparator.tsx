@@ -1,17 +1,21 @@
 import { useId, useState } from 'react'
+import { KanbanSquare, Scale } from 'lucide-react'
 import type { Application } from '../../types'
 import { calculateSkillMatch } from '../../utils/skillMatch'
 import { computeOfferScores, formatScore, pickBestOffer } from '../../utils/offerScore'
 import { Badge } from '../ui/Badge'
+import { Button } from '../ui/Button'
 
 interface OfferComparatorProps {
   applications: Application[]
   kaptenSkills: string[]
+  onGoToPipeline?: () => void
 }
 
 export function OfferComparator({
   applications,
   kaptenSkills,
+  onGoToPipeline,
 }: OfferComparatorProps) {
   const [idA, setIdA] = useState<string | null>(null)
   const [idB, setIdB] = useState<string | null>(null)
@@ -21,9 +25,36 @@ export function OfferComparator({
 
   if (offers.length < 2) {
     return (
-      <p className="text-sm text-[#57524B] dark:text-[#B5AFA7]">
-        {`Belum bisa membandingkan: butuh minimal 2 lamaran berstatus OFFER (saat ini ${offers.length}).`}
-      </p>
+      <section className="mc-panel p-8 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[3px] border border-[#8EC980] bg-[#E3F4DE] text-[#1F5314] dark:border-[#3D8230] dark:bg-[#193516] dark:text-[#91EB7A]">
+          <Scale className="h-6 w-6" />
+        </div>
+        <h1 className="mt-4 font-pixel text-lg font-bold text-[#171615] uppercase sm:text-xl dark:text-white">
+          Bandingkan{' '}
+          <span className="text-[#1F5314] dark:text-[#78D95F]">Offer Magang</span>
+        </h1>
+        <p className="mx-auto mt-2 max-w-lg text-sm text-[#57524B] dark:text-[#B5AFA7]">
+          Belum bisa membandingkan: butuh minimal{' '}
+          <strong className="mc-tabular font-mono text-[#171615] dark:text-white">
+            2
+          </strong>{' '}
+          lamaran berstatus <code className="font-mono font-semibold">OFFER</code>{' '}
+          (saat ini{' '}
+          <strong className="mc-tabular font-mono text-[#171615] dark:text-white">
+            {offers.length}
+          </strong>
+          ). Pindahkan lamaran di Pipeline hingga tahap Offer untuk melihat skor
+          berbobot.
+        </p>
+        {onGoToPipeline && (
+          <div className="mt-5">
+            <Button variant="primary" size="md" onClick={onGoToPipeline}>
+              <KanbanSquare className="h-4 w-4" />
+              <span>Buka Pipeline Lamaran</span>
+            </Button>
+          </div>
+        )}
+      </section>
     )
   }
 

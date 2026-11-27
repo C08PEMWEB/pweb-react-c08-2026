@@ -18,6 +18,10 @@ interface StatusTransitionPanelProps {
   onTransition: (target: ApplicationStatus, payload: StatusTransitionPayload) => void
 }
 
+function getTodayDateString(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
 export function StatusTransitionPanel({
   application,
   onTransition,
@@ -25,7 +29,9 @@ export function StatusTransitionPanel({
   const uid = useId()
   const [target, setTarget] = useState<ApplicationStatus | null>(null)
   const [cvVersion, setCvVersion] = useState(application.cvVersion ?? '')
-  const [appliedDate, setAppliedDate] = useState(application.appliedDate ?? '')
+  const [appliedDate, setAppliedDate] = useState(
+    application.appliedDate ?? getTodayDateString(),
+  )
   const [interviewDateTime, setInterviewDateTime] = useState(
     application.interviewDateTime ?? '',
   )

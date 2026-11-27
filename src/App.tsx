@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, RotateCcw } from "lucide-react";
+import { CheckCircle2, Ghost, RotateCcw, Trash2 } from "lucide-react";
 import { BackupModal } from "./components/bonus/BackupModal";
 import { StatsCards } from "./components/dashboard/StatsCards";
 import { ApplicationDetail } from "./components/detail/ApplicationDetail";
@@ -213,13 +213,17 @@ export default function App() {
     targetStatus: ApplicationStatus,
     payload?: StatusTransitionPayload,
   ) => {
+    const currentApp = applications.find((app) => app.id === id);
+    if (!currentApp) return;
+
     try {
+      const transitioned = applyStatusTransition(
+        currentApp,
+        targetStatus,
+        payload,
+      );
       setApplications((prev) =>
-        prev.map((app) =>
-          app.id === id
-            ? applyStatusTransition(app, targetStatus, payload)
-            : app,
-        ),
+        prev.map((app) => (app.id === id ? transitioned : app)),
       );
       showToast(`Status lamaran diperbarui menjadi ${targetStatus}.`);
     } catch (err: unknown) {
@@ -238,6 +242,10 @@ export default function App() {
     if (undoTimerRef.current !== null) {
       window.clearTimeout(undoTimerRef.current);
       undoTimerRef.current = null;
+    }
+
+    if (selectedApplicationId === id) {
+      setSelectedApplicationId(null);
     }
 
     setApplications((prev) => prev.filter((app) => app.id !== id));
@@ -354,6 +362,7 @@ export default function App() {
           <OfferComparator
             applications={applications}
             kaptenSkills={kaptenSkills}
+            onGoToPipeline={() => setActiveTab("pipeline")}
           />
         )}
       </main>
@@ -377,7 +386,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Modal Form Tambah Lamaran Manual (Fitur 2 — Anggota 2) */}
+      {/* Modal Detail Lamaran (Fitur 4 & 5 — Anggota 3) */}
       {selectedApplication && (
         <ApplicationDetail
           application={selectedApplication}
@@ -386,6 +395,29 @@ export default function App() {
             handleTransitionStatus(selectedApplication.id, targetStatus, payload)
           }
           onClose={() => setSelectedApplicationId(null)}
+          headerActions={
+            <>
+              {(selectedApplication.status === "APPLIED" ||
+                selectedApplication.status === "SCREENING") && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleSimulateGhosting(selectedApplication.id)}
+                >
+                  <Ghost className="h-3.5 w-3.5" />
+                  <span>Simulasi +15 Hari</span>
+                </Button>
+              )}
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => handleDeleteApplication(selectedApplication.id)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Hapus</span>
+              </Button>
+            </>
+          }
         />
       )}
 

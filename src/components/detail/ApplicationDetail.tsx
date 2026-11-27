@@ -69,7 +69,7 @@ export function ApplicationDetail({
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="space-y-5">
             <StatusTransitionPanel
-              key={application.id}
+              key={`${application.id}-${application.status}`}
               application={application}
               onTransition={onTransition}
             />

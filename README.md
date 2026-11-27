@@ -1,11 +1,15 @@
-# Aku Mw Magang — Praktikum Pemweb Modul 5
+# Aku Mw Magang — Praktikum Pemweb Modul 5 (Kelompok C08)
 
-Aplikasi Frontend SPA **React 19 + TypeScript (strict, tanpa `any`) + Vite + Tailwind CSS** bertema **Minecraft Overworld / Deepslate** untuk membantu Kapten mengelola proses pencarian magang dari eksplorasi lowongan hingga memilih offer terbaik.
+Aplikasi Frontend SPA **React 19 + TypeScript (`strict: true`, tanpa `any`) + Vite + Tailwind CSS** bertema **Minecraft Overworld / Deepslate** untuk membantu Kapten mengelola seluruh proses pencarian magang — dari eksplorasi lowongan, War Room pipeline, latihan interview, hingga membandingkan offer terbaik.
+
+---
 
 ## Tech Stack & Aturan Teknis
-- **React 19** + **TypeScript** (`"strict": true`, tanpa `any`)
+- **React 19** + **TypeScript** (`"strict": true`, 0 pemakaian `any`)
 - **Vite** + **Tailwind CSS v4** + **Lucide React**
-- **100% React Hooks bawaan & Custom Hooks sendiri** (`useLocalStorage<T>`, `useDebounce<T>`) — tanpa Redux, Zustand, TanStack Query, React Hook Form, maupun Formik.
+- **100% React Hooks bawaan & Custom Hooks sendiri** (`useLocalStorage<T>`, `useDebounce<T>`) — tanpa library state management eksternal (Redux/Zustand/TanStack Query) maupun library form (React Hook Form/Formik).
+
+---
 
 ## Struktur Folder
 ```text
@@ -17,9 +21,11 @@ public/
 src/
 ├── components/
 │   ├── bonus/                # BackupModal (Export & Import JSON)
+│   ├── dashboard/            # Fitur 7: StatsCards (5 kartu derived state) & OfferComparator
+│   ├── detail/               # Fitur 4 & 5: ApplicationDetail, StatusTransitionPanel, ChecklistSection, ActivityLogSection, InterviewTimer
 │   ├── explore/              # Fitur 1: HeroBanner, SkillProfilePanel, JobCard, JobExplorer
 │   ├── layout/               # Navbar bergaya minecraft.net & MinecraftWorldBackdrop siang/malam
-│   ├── placeholders/         # Slot integrasi siap pakai untuk Anggota 2 & 3
+│   ├── pipeline/             # Fitur 2 & 3: ApplicationForm, InterviewConflictBanner, PipelineView
 │   └── ui/                   # Design System reusable: Button, Badge, Modal, MinecraftIcons
 ├── hooks/
 │   ├── useDebounce.ts        # Custom Hook wajib (delay 400ms)
@@ -27,37 +33,60 @@ src/
 ├── services/
 │   └── jobService.ts         # Fetch Remotive API & fallback lokal + AbortController
 ├── types/
-│   └── index.ts              # Kontrak interface Application, JobListing, dll.
+│   └── index.ts              # Kontrak interface Application, JobListing, ChecklistItem, ActivityLog
 ├── utils/
+│   ├── activityLog.ts        # Helper Activity Log & format timestamp
 │   ├── backup.ts             # Validasi & Export/Import JSON type-safe
-│   └── skillMatch.ts         # Derived state Skill Match %, anti-duplikat, workMode
+│   ├── checklist.ts          # Helper Nested Checklist 100% immutable
+│   ├── offerScore.ts         # Perhitungan skor berbobot Offer Comparator (50/25/25)
+│   ├── scheduleChecker.ts    # Deteksi Rawan Ghosting (> 14 hari) & Bentrok Interview (< 60 menit)
+│   ├── skillMatch.ts         # Derived state Skill Match %, anti-duplikat, workMode
+│   ├── stateMachine.ts       # Engine & validasi transisi status ketat
+│   └── stats.ts              # Derived state 5 kartu statistik dashboard
 ├── App.tsx
-├── index.css                 # Minecraft Overworld / Deepslate theme tokens
+├── index.css
 └── main.tsx
 ```
 
-## Fitur Bagian Anggota 1 (Selesai)
-- **Setup & Core Infrastructure:** Vite + React 19 + TypeScript strict + Tailwind CSS v4, `src/types/index.ts`, `useLocalStorage<T>`, `useDebounce<T>`, `public/magang-fallback.json` (15 lowongan), `src/services/jobService.ts`.
-- **Minecraft Design System & Shell:** `Navbar`, `Modal`, `Button`, `Badge`, `MinecraftIcons`, serta panduan tim di `DESIGN_SYSTEM.md`.
-- **Fitur 1 (Profil Skill Kapten & Eksplorasi Lowongan):**
-  - Manajemen skill Kapten (default `React`, `TypeScript`, `CSS`, tolak duplikat case-insensitive, persistensi `localStorage`).
-  - Fetch Remotive API & Fallback Lokal dengan `useEffect` + `fetch()` + `AbortController` serta state **Loading**, **Error (+ Coba Lagi & Pakai Fallback Lokal)**, dan **Empty**.
-  - Pencarian dengan `useDebounce(keyword, 400)`, filter kategori dinamis, dan sorting (default **Match Tertinggi**).
-  - Live **Skill Match Score %** (hijau >= 70%, kuning 40–69%, merah < 40%), highlight skill cocok vs missing skills, dan tombol **Simpan ke Wishlist** (otomatis disabled `"Sudah Dilamar"` bila `company + role` sudah ada).
-- **Fitur Bonus:**
-  - **Dark Mode** (*Overworld Day* ↔ *Deepslate Night*) menggunakan `useLocalStorage`.
-  - **Keyboard Shortcut `/`** untuk fokus otomatis ke search bar via `useRef`.
-  - **Export & Import Backup JSON** dengan validasi tipe ketat.
+---
 
-## Menjalankan Proyek
+## Ringkasan 7 Fitur Utama & 3 Fitur Bonus
+
+1. **Fitur 1 — Profil Skill Kapten & Eksplorasi Lowongan:**
+   - Manajemen skill Kapten (default `React`, `TypeScript`, `CSS`, tolak duplikat *case-insensitive*, persisten di `localStorage`).
+   - Fetch Remotive Live API & Fallback Lokal (`public/magang-fallback.json`) via `useEffect` + `fetch()` + `AbortController` lengkap dengan state **Loading**, **Error (+ Coba Lagi & Pakai Fallback Lokal)**, dan **Empty**.
+   - Search dengan `useDebounce(keyword, 400)`, filter kategori dinamis, sorting default **Match Tertinggi**, live **Skill Match Score %** (hijau >= 70%, kuning 40–69%, merah < 40%) + Minecraft XP-Bar, dan tombol **Simpan ke Wishlist** (otomatis disabled `"Sudah Dilamar"` bila duplikat `company + role`).
+2. **Fitur 2 — Form Tambah Lamaran Manual:**
+   - Controlled form penuh (`value` + `onChange`), input kondisional `cvVersion` & `appliedDate` wajib saat status awal `APPLIED`, validasi kosong & anti-duplikat, serta auto-focus otomatis ke input pertama yang error via `useRef`.
+3. **Fitur 3 — War Room Pipeline, Ghosting & Bentrok Jadwal:**
+   - Filter gabungan (pencarian teks, filter status, toggle *Hanya Rawan Ghosting*) + sorting (*Terbaru*, *Jadwal Interview Terdekat*, *Offer Tertinggi*).
+   - Tombol **Simulasi +15 Hari** pada status `APPLIED`/`SCREENING` untuk memicu badge *Rawan Ghosting* (> 14 hari).
+   - **Banner Peringatan Bentrok** (>= 2 lamaran `INTERVIEW` selisih < 60 menit) dihitung dari seluruh data dan tetap tampil lintas filter di semua tab.
+4. **Fitur 4 — Detail Lamaran (State Machine, Nested Checklist & Activity Log):**
+   - Perpindahan status ketat mengikuti State Machine (`OFFER` & `REJECTED` final, `GHOSTED` boleh kembali ke `SCREENING`) dengan validasi input kondisional.
+   - Nested Checklist 100% immutable dengan progress bar (`X / Y selesai`) dan Activity Log otomatis + catatan manual Kapten.
+5. **Fitur 5 — Interview Prep Timer:**
+   - 6 pertanyaan latihan interview magang IT, countdown `02:00` dengan tombol **Mulai/Jeda**, **Reset**, dan **Soal Berikutnya**, serta `useEffect` cleanup (`clearInterval`) saat panel ditutup.
+6. **Fitur 6 — Undo Delete (5 Detik) & Persistensi LocalStorage:**
+   - Toast Undo 5 detik mengembalikan lamaran utuh (termasuk checklist & activity logs); ID `setTimeout` disimpan di `useRef` dan dibersihkan via `clearTimeout` bila menghapus 2× berturut-turut dalam < 5 detik.
+7. **Fitur 7 — Dashboard Statistik & Offer Comparator:**
+   - 5 Kartu Statistik (*Total Lamaran*, *Response Rate %*, *Interview Rate %*, *Rawan Ghosting*, *Total Offer*) sebagai derived state.
+   - Perbandingan **Offer A vs Offer B** saat Offer >= 2 dengan rumus berbobot (Uang Saku 50%, Mode Kerja 25%, Kecocokan Skill 25%) + badge **Rekomendasi Terbaik**.
+8. **Fitur Bonus:**
+   - **Tema Siang ↔ Malam** (*Overworld Day* ↔ *Deepslate Night* lengkap dengan latar desa Minecraft berubah sesuai tema) menggunakan `useLocalStorage`.
+   - **Keyboard Shortcut `/`** untuk fokus otomatis ke search bar via `useRef`.
+   - **Export & Import Backup JSON** dengan validasi tipe ketat.
+
+---
+
+## Menjalankan & Memverifikasi Proyek
 ```bash
 npm install
 npm run dev
 ```
 
-## Verifikasi Type-Check & Build
+Cek type-check dan production build:
 ```bash
 npx tsc --noEmit
 npm run build
 ```
-
